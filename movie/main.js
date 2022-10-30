@@ -76,6 +76,25 @@ module.exports = {
 						res();
 					}
 				}
+				case "s": {
+					let numId = Number.parseInt(suffix);
+					if (isNaN(numId)) res();
+					let filePath = fUtil.getFileIndex("starter-", ".xml", numId);
+					if (!fs.existsSync(filePath)) res();
+
+					const buffer = fs.readFileSync(filePath);
+					if (!buffer || buffer.length == 0) res();
+
+					try {
+						parse.packMovie(buffer, mId).then((pack) => {
+							caché.saveTable(mId, pack.caché);
+							res(pack.zipBuf);
+						});
+						break;
+					} catch (e) {
+						res();
+					}
+				}
 				default:
 					res();
 			}
