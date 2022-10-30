@@ -11,6 +11,8 @@ const cht = require("./character/thmb");
 const mvu = require("./movie/upload");
 const asu = require("./asset/upload");
 const stl = require("./static/load");
+const str = require("./starter/save");
+const stt = require("./starter/thmb");
 const stp = require("./static/page");
 const asl = require("./asset/load");
 const asL = require("./asset/list");
@@ -25,8 +27,10 @@ const thl = require("./theme/load");
 const tsv = require("./tts/voices");
 const tsl = require("./tts/load");
 const url = require("url");
+if (!fs.existsSync(env.ASSETS_FOLDER)) fs.mkdirSync(env.ASSETS_FOLDER);
+if (!fs.existsSync(env.META_FOLDER)) fs.mkdirSync(env.META_FOLDER);
 
-const functions = [mvL, pmc, asl, chl, thl, thL, chs, cht, asL, tsl, chr, ast, mvm, mvl, mvs, mvt, tsv, asu, mvu, stp, stl];
+const functions = [str, stt, mvL, pmc, asl, chl, thl, thL, chs, cht, asL, tsl, chr, ast, mvm, mvl, mvs, mvt, tsv, asu, mvu, stp, stl];
 
 let opt = {
 	key: fs.readFileSync('the.key'),
@@ -38,14 +42,12 @@ function scf() {
 			const parsedUrl = url.parse(req.url, true);
 			//if (!parsedUrl.path.endsWith('/')) parsedUrl.path += '/';
 			const found = functions.find((f) => f(req, res, parsedUrl));
-			console.log(req.method, parsedUrl.path);
-			if (!found) {
-				res.statusCode = 404;
-				res.end();
-			}
+			if (!found) res.statusCode = 404;
+			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		} catch (x) {
-			res.statusCode = 404;
-			res.end();
+			res.statusCode = 500;
+			console.log(x);
+			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		}
 	})
 	.listen(env.HTTP_PORT, "0.0.0.0");
@@ -56,14 +58,12 @@ function scf() {
 			const parsedUrl = url.parse(req.url, true);
 			//if (!parsedUrl.path.endsWith('/')) parsedUrl.path += '/';
 			const found = functions.find((f) => f(req, res, parsedUrl));
-			console.log(req.method, parsedUrl.path);
-			if (!found) {
-				res.statusCode = 404;
-				res.end();
-			}
+			if (!found) res.statusCode = 404;
+			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		} catch (x) {
-			res.statusCode = 404;
-			res.end();
+			res.statusCode = 500;
+			console.log(x);
+			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		}
 	})
 	.listen(env.HTTPS_PORT, "0.0.0.0");

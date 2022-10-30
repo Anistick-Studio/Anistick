@@ -5,8 +5,16 @@ const nodezip = require("node-zip");
 const base = Buffer.alloc(1, 0);
 const asset = require("./main");
 const http = require("http");
-
-async function listAssets(data, makeZip) {
+const fs = require("fs");
+const starter = require("../starter/main");
+function movieXml(v) {
+	const title = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-title.txt`, 'utf8');
+	const tag = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-tag.txt`, 'utf8');
+	return `<movie id="${v.id}" enc_asset_id="${v.id}" path="/_SAVED/${v.id}" numScene="1" title="${
+		title
+	}" thumbnail_url="/starter_thumbs/${v.id}.png"><tags>${tag}</tags></movie>`;
+}
+async function listAssets(data) {
 	var xmlString, files;
 	switch (data.type) {
 		case "char": {
@@ -16,13 +24,6 @@ async function listAssets(data, makeZip) {
 					(v) =>
 						`<char id="${v.id}" name="Untitled" cc_theme_id="${v.theme}" thumbnail_url="http://localhost/char_thumbs/${v.id}.png" copyable="Y"><tags/></char>`
 				)
-				.join("")}</ugc>`;
-			break;
-		}
-		case "bg": {
-			files = asset.list(data.movieId, "bg");
-			xmlString = `${header}<ugc more="0">${files
-				.map((v) => `<background subtype="0" id="${v.id}" name="${v.name}" enable="Y"/>`)
 				.join("")}</ugc>`;
 			break;
 		}
@@ -36,18 +37,7 @@ async function listAssets(data, makeZip) {
 				.join("")}</ugc>`;
 			break;
 		}	
-		case "movie": {
-			files = asset.list(data.movieId, "starter");
-			xmlString = `${header}<ugc more="0">${files
-				.map(
-					(v) =>
-						`<movie id="${v.id}" enc_asset_id="${v.id}" path="/_SAVED/${v.id}" numScene="1" title="${v.name}" thumbnail_url="/movie_thumbs/${v.id}.png"><tags></tags></movie>`
-				)
-				.join("")}</ugc>`;
-			break;
-		}
-		case "prop":
-		default: {
+		case "prop": {
 			files = asset.list(data.movieId, "prop");
 			xmlString = `${header}<ugc more="0">${files
 				.map(
@@ -58,19 +48,7 @@ async function listAssets(data, makeZip) {
 			break;
 		}
 	}
-
-	if (makeZip) {
-		const zip = nodezip.create();
-		fUtil.addToZip(zip, "desc.xml", Buffer.from(xmlString));
-
-		files.forEach((file) => {
-			const buffer = asset.load(data.movieId, file.id);
-			fUtil.addToZip(zip, `${file.mode}/${file.id}`, buffer);
-		});
-		return await zip.zip();
-	} else {
-		return Buffer.from(xmlString);
-	}
+	return Buffer.from(xmlString);	
 }
 
 /**
@@ -79,42 +57,72 @@ async function listAssets(data, makeZip) {
  * @param {import("url").UrlWithParsedQuery} url
  * @returns {boolean}
  */
-module.exports = function (req, res, url) {
-	var makeZip = false;
-	switch (url.pathname) {
-		case "/goapi/getUserAssets/":
-			makeZip = true;
-			break;
-		case "/goapi/getUserAssetsXml/":
-			break;
-		default:
-			return;
-	}
-
+module.exports = function (req, res, url) {	
 	switch (req.method) {
-		case "GET": {
-			var q = url.query;
-			if (q.movieId && q.type) {
-				listAssets(q, makeZip).then((buff) => {
-					const type = makeZip ? "application/zip" : "text/xml";
-					res.setHeader("Content-Type", type);
-					res.end(buff);
-				});
-				return true;
-			} else return;
-		}
 		case "POST": {
-			loadPost(req, res)
-				.then(data => listAssets(data, makeZip))
-				.then((buff) => {
-					const type = makeZip ? "application/zip" : "text/xml";
-					res.setHeader("Content-Type", type);
-					if (makeZip) res.write(base);
-					res.end(buff);
-				});
-			return true;
-		}
-		default:
-			return
+			switch (url.pathname) {
+				case "/goapi/getUserAssets/": {	
+					loadPost(req, res).then(data => {
+						switch (data.type) {
+							case "movie": {
+								starter.list().then(async files => {
+									const xml = `${header}<ugc more="0">${files.map((v) => movieXml(v)).join('')}</ugc>`;
+									console.log(xml);
+									const zip = nodezip.create();
+									fUtil.addToZip(zip, "desc.xml", Buffer.from(xml));
+									res.setHeader("Content-Type", "application/zip");
+									res.write(base);
+									res.end(await zip.zip());
+								}).catch(e => console.log(e));
+								break;
+							} case "bg": {
+								function listBackgrounds() {
+									return new Promise(async res => {
+										files = asset.list(data.movieId, "bg");
+										const xml = `${header}<ugc more="0">${
+											files.map((v) => `<background subtype="0" id="${v.id}" name="${v.name}" enable="Y"/>`).join("")
+										}</ugc>`;
+										const zip = nodezip.create();
+										fUtil.addToZip(zip, "desc.xml", Buffer.from(xml));
+										res(await zip.zip());
+									});
+								}
+								listBackgrounds().then((buff) => {
+									res.setHeader("Content-Type", "application/zip");
+									res.write(base);
+									res.end(buff);
+								}).catch(e => console.log(e));
+								break;
+							} case "prop": {
+								function listProps() {
+									return new Promise(async res => {
+										files = asset.list(data.movieId, "video");
+										const xml = `${header}<ugc more="0">${
+											files.map((v) => `<prop height="10" width="10" id="${v.id}" name="${v.name}" enable="Y"/>`).join("")
+										}</ugc>`;
+										const zip = nodezip.create();
+										fUtil.addToZip(zip, "desc.xml", Buffer.from(xml));
+										res(await zip.zip());
+									});
+								}
+								listProps().then((buff) => {
+									res.setHeader("Content-Type", "application/zip");
+									res.write(base);
+									res.end(buff);
+								}).catch(e => console.log(e));
+								break;
+							}
+						}
+					});
+					return true;
+				} case "/goapi/getUserAssetsXml/": {
+					loadPost(req, res).then(data => listAssets(data)).then((buff) => {
+						res.setHeader("Content-Type", "text/xml");
+						res.end(buff);
+					});
+					return true;
 				}
+			}
+		} default: return;
+	}
 };

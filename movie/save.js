@@ -1,6 +1,7 @@
-const loadPost = require("../request/post_body");
-const movie = require("./main");
-const http = require("http");
+const loadPost = require("../request/post_body"),
+movie = require("./main"),
+http = require("http");
+const get = require("../request/get");
 
 /**
  * @param {http.IncomingMessage} req
@@ -11,12 +12,11 @@ const http = require("http");
 module.exports = function (req, res, url) {
 	if (req.method != "POST" || url.path != "/goapi/saveMovie/") return;
 	loadPost(req, res).then(data => {
-		const trigAutosave = data.is_triggered_by_autosave;
-		if (trigAutosave && (!data.movieId || data.noAutosave)) return res.end(0);
-
-		var body = Buffer.from(data.body_zip, "base64");
-		var thumb = data.thumbnail_large && Buffer.from(data.thumbnail_large, "base64");
-		movie.save(body, thumb, data.presaveId).then((nId) => res.end(0 + nId));
-	});
+		get(process.env.THUMB_BASE_URL + '/274502704.jpg').then(t => {
+			const body = Buffer.from(data.body_zip, "base64"),
+			thumb = !data.thumbnail ? t : Buffer.from(data.thumbnail, "base64");
+			movie.save(body, thumb, data.presaveId).then(id => res.end(0 + id)).catch(e => console.log(e));
+		}).catch(e => console.log(e));
+	}).catch(e => console.log(e));
 	return true;
 };
