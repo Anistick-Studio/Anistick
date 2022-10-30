@@ -1,12 +1,17 @@
 :: Important stuff
 @echo off && cls
-if not exist "ins" (if not exist "notins" (echo Anistick Configuration File >> notins))
 set VER=2.3
 set BVER=1
 set NAME=Anistick
-set ENV=dev
-if %ENV%==dev ( git pull || git stash && git pull ) else ( git stash && git pull )
 title %NAME% v%VER% Build %BVER%
+:: update
+if exist .git ( set ENV=dev ) else ( set ENV=production )
+echo Updating Anistick...
+if %ENV%==dev ( git pull || git stash && git pull ) else ( if exist .git ( git pull ) else ( echo Update Failed Because Git was not found. && pause && cls && goto install ) )
+echo Update Complete
+pause 
+cls
+goto install
 
 ::::::::::::::::::::
 :: Initialization ::
@@ -21,11 +26,6 @@ cls
 :::::::::::::::::::::::::::::::
 
 :: Check for installation
-if not exist node_modules ( npm install && goto start ) else ( goto start )
-
-:: Run npm start
-:start
-echo %NAME% is now starting...
-echo Please navigate to https://localhost on Chromium.
-npm start
+:install
+if not exist node_modules ( npm install && npm start ) else ( npm start )
 pause
