@@ -13,29 +13,31 @@ module.exports = {
 	 * @param {string} oldId
 	 * @returns {Promise<string>}
 	 */
-	save(movieZip, thumb, oldId, nëwId = oldId) {
+	save(movieZip, thumb, mId) {
 		// Saves the thumbnail of the respective video.
-		if (thumb && nëwId.startsWith("m-")) {
-			const n = Number.parseInt(nëwId.substr(2));
+		var id = `m-${fUtil.getNextFileId("movie-", ".xml")}`;
+		if (mId) id = mId;
+		if (thumb && id.startsWith("m-")) {
+			const n = Number.parseInt(id.substr(2));
 			const thumbFile = fUtil.getFileIndex("thumb-", ".png", n);
 			fs.writeFileSync(thumbFile, thumb);
 		}
 
 		return new Promise(async (res, rej) => {
-			caché.transfer(oldId, nëwId);
-			var i = nëwId.indexOf("-");
-			var prefix = nëwId.substr(0, i);
-			var suffix = nëwId.substr(i + 1);
+			caché.transfer(mId, id);
+			var i = id.indexOf("-");
+			var prefix = id.substr(0, i);
+			var suffix = id.substr(i + 1);
 			var zip = nodezip.unzip(movieZip);
 			switch (prefix) {
 				case "m": {
 					var path = fUtil.getFileIndex("movie-", ".xml", suffix);
 					var writeStream = fs.createWriteStream(path);
-					var assetBuffers = caché.loadTable(nëwId);
+					var assetBuffers = caché.loadTable(id);
 					parse.unpackMovie(zip, thumb, assetBuffers).then((data) => {
 						writeStream.write(data, () => {
 							writeStream.close();
-							res(nëwId);
+							res(id);
 						});
 					});
 					break;

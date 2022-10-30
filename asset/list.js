@@ -67,7 +67,6 @@ module.exports = function (req, res, url) {
 							case "movie": {
 								starter.list().then(async files => {
 									const xml = `${header}<ugc more="0">${files.map((v) => movieXml(v)).join('')}</ugc>`;
-									console.log(xml);
 									const zip = nodezip.create();
 									fUtil.addToZip(zip, "desc.xml", Buffer.from(xml));
 									res.setHeader("Content-Type", "application/zip");

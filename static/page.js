@@ -100,10 +100,6 @@ module.exports = function (req, res, url) {
 		}
 
 		case "/go_full": {
-			let presave =
-				query.movieId && query.movieId.startsWith("m")
-					? query.movieId
-					: `m-${fUtil[query.noAutosave ? "getNextFileId" : "fillNextFileId"]("movie-", ".xml")}`;
 			title = "Video Editor";
 			attrs = {
 				data: process.env.SWF_URL + `/go_full${url.query.v || ""}.swf`,
@@ -128,7 +124,7 @@ module.exports = function (req, res, url) {
 					clientThemePath: process.env.CLIENT_URL + "/<client_theme>",
 					themeId: "business",
 					tlang: "en_US",
-					presaveId: presave,
+					movieId: query.movieId || "",
 					goteam_draft_only: 1,
 					isWide: 1,
 					collab: 0,

@@ -49,6 +49,18 @@ module.exports = {
 			}).catch(e => rej(e));
 		});
 	},
+	delete(sId) {
+		if (!sId.startsWith("s-")) return;
+		const n = Number.parseInt(sId.substr(2));
+		const xml = fUtil.getFileIndex("starter-", ".xml", n);
+		const png = fUtil.getFileIndex("starter-", ".png", n);
+		const title = process.env.META_FOLDER + `/${sId}-title.txt`;
+		const tag = process.env.META_FOLDER + `/${sId}-tag.txt`;
+		fs.unlinkSync(xml);
+		fs.unlinkSync(png);
+		fs.unlinkSync(title);
+		fs.unlinkSync(tag);
+	},
 	thumb(movieId) {
 		return new Promise((res, rej) => {
 			if (!movieId.startsWith('s-')) return;
