@@ -3,22 +3,23 @@ const { app, BrowserWindow, Menu, MenuItem } = require("electron");
 const path = require("path");
 const mm = new Menu();
 const env = Object.assign(process.env,require("./env"))
+let gcw;
 mm.append(new MenuItem ({
             label: 'Home',
             click() { 
-               mainWindow.loadURL('https://www.google.com')
+               gcw.loadURL('http://localhost')
             }
          }));
 mm.append(new MenuItem ({
             label: 'GitHub',
             click() { 
-               mainWindow.loadURL('https://github.com/KiaWeb/GoodOldBrowse');
+               gcw.loadURL('https://github.com/Anistick-Studio/Anistick');
             }
          }));
 mm.append(new MenuItem ({
             label: 'Flash Test',
             click() { 
-               mainWindow.loadURL('https://ultrasounds.com');
+               gcw.loadURL('https://ultrasounds.com');
             }
          }));
 let pluginName;
@@ -53,7 +54,6 @@ const createWindow = () => {
 			contextIsolation: true
 		}
 	});
-	Menu.setApplicationMenu(mm);
 	env.MAIN_WINDOW_ID = mainWindow.id;
 	
 	mainWindow.loadURL('https://www.google.com');
@@ -65,6 +65,8 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
 	setTimeout(createWindow, 2000);
+	gcw = BrowserWindow.getCurrentWindow();
+	Menu.setApplicationMenu(mm);
 });
 app.on("window-all-closed", () => {
 	if (process.platform !== "darwin") app.quit();
