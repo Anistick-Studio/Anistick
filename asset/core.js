@@ -40,12 +40,9 @@ async function listAssets(data) {
 	switch (data.type) {
 		case "char": {
 			const chars = await asset.chars(data.themeId);
-			xmlString = `${header}<ugc more="0">${chars
-				.map(
-					(v) =>
-						`<char id="${v.id}" name="Untitled" cc_theme_id="${v.theme}" thumbnail_url="/char_thumbs/${v.id}.png" copyable="Y"><tags/></char>`
-				)
-				.join("")}</ugc>`;
+			xmlString = `${header}<ugc more="0">${chars.map(v => `<char id="${v.id}" name="Untitled" cc_theme_id="${
+				v.theme
+			}" thumbnail_url="/char_thumbs/${v.id}.png" copyable="Y"><tags/></char>`).join("")}</ugc>`;
 			break;
 		}
 		case "prop": {
@@ -82,7 +79,7 @@ module.exports = function (req, res, url) {
 				case "/goapi/getAsset/":
 				case "/goapi/getAssetEx/": {
 					loadPost(req, res).then(data => {
-						asset.load(data.assetId).then(b => {
+						asset.load(data.assetId.slice(0, -4)).then(b => {
 							res.setHeader("Content-Length", b.length);
 							res.setHeader("Content-Type", "audio/mp3");
 							res.end(b);

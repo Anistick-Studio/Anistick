@@ -4,7 +4,7 @@ const caché = require("./caché");
 const fs = require("fs");
 
 module.exports = {
-	createMeta(id, name, type) {
+	createMeta(id, name, type, subtype, dur = false) {
 		var prefix;
 		switch (type) {
 			case "bg": {
@@ -13,6 +13,14 @@ module.exports = {
 			} case "prop": {
 				prefix = "p";
 				break;
+			} case "sound": {
+				switch (subtype) {
+					case "tts": {
+						prefix = "t";
+						break;
+					}
+				}
+				fs.writeFileSync(process.env.META_FOLDER + `/${prefix}-${id}-dur.txt`, `dur.${dur}`);
 			}
 		}
 		fs.writeFileSync(process.env.META_FOLDER + `/${prefix}-${id}-title.txt`, name);
@@ -48,11 +56,20 @@ module.exports = {
 			isNaN(n) ? rej("Error: Your ID Has Failed To Parse. Please Try Again Later.") : res(fs.readFileSync(fn));
 		});
 	},
-	save(_ut, type, ext, buffer) {
+	save(_ut, type, ext, buffer, subtype) {
 		return new Promise(res => {
-			const id = fUtil.getNextFileIdForAssets(`${type}-`, `.${ext}`);
-			const path = fUtil.getFileIndexForAssets(`${type}-`, `.${ext}`, id);
-			fs.writeFileSync(path, buffer);
+			var id;
+			if (type != "sound") {
+				id = fUtil.getNextFileIdForAssets(`${type}-`, `.${ext}`);
+				const path = fUtil.getFileIndexForAssets(`${type}-`, `.${ext}`, id);
+				fs.writeFileSync(path, buffer);
+			} else {
+				id = fUtil.getNextFileIdForAssets(`asset-`, `.${ext}`);
+				const path = fUtil.getFileIndexForAssets(`asset-`, `.${ext}`, id);
+				const subpath = fUtil.getFileIndexForAssets(`${subtype}-`, `.${ext}`, id);
+				fs.writeFileSync(subpath, buffer);
+				fs.writeFileSync(path, buffer);
+			}
 			res(id);
 		});
 	},

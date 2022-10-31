@@ -5,6 +5,7 @@ const asset = require("../asset/main");
 const util = require("../misc/util");
 const tts = require("./main");
 const http = require("http");
+const fs = require("fs");
 
 /**
  * @param {http.IncomingMessage} req
@@ -23,10 +24,19 @@ module.exports = function (req, res, url) {
 					return true;
 				} else {
 					const title = `[${voices[data.voice].desc}] ${data.text}`;
-					const id = asset.save(buffer, mId, "tts", "mp3");
-					res.end(
-						`0<response><asset><id>${id}</id><enc_asset_id>${id}</enc_asset_id><type>sound</type><subtype>tts</subtype><title>${title}</title><published>0</published><tags></tags><duration>${dur}</duration><downloadtype>progressive</downloadtype><file>${id}</file></asset></response>`
-					);
+					asset.save(data.ut, "sound", "mp3", buffer, "tts").then(id => {
+						asset.createMeta(id, `t-${id}.mp3`, "sound", "tts", dur);
+						res.end(`0<response><asset><id>${id}.mp3</id><enc_asset_id>${
+							id
+						}.mp3</enc_asset_id><type>sound</type><subtype>tts</subtype><title>${
+							title
+						}</title><published>0</published><tags></tags><duration>${
+							dur
+						}</duration><downloadtype>progressive</downloadtype><file>${id}.mp3</file></asset></response>`);
+					}).catch(e => {
+						console.log(e);
+						res.end(1 + util.xmlFail(e));
+					});
 				}
 			});
 		}).catch(e => {
