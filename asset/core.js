@@ -9,6 +9,7 @@ const http = require("http");
 const fs = require("fs");
 const starter = require("../starter/main");
 const util = require("../misc/util");
+const mp3Duration = require("mp3-duration");
 function movieXml(v) {
 	const title = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-title.txt`, 'utf8');
 	const tag = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-tag.txt`, 'utf8');
@@ -18,7 +19,7 @@ function movieXml(v) {
 }
 function propXml(v) {
 	const title = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-title.txt`, 'utf8');
-	const ext = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-ext.txt`, 'utf8') || getImgExt(title);
+	const ext = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-ext.txt`, 'utf8') || getExt(title);
 	const meta = require('.' + process.env.META_FOLDER + `/${v.id}-meta.json`);
 	return `<prop subtype="0" id="${v.id}.${ext}" name="${
 		title
@@ -26,14 +27,24 @@ function propXml(v) {
 		meta.placeable
 	}" facing="left" width="0" height="0" asset_url="/assets/${v.type}/${v.id}.${ext}"/>`;
 }
-function getImgExt(buffer) {
+function getExt(buffer) {
 	const dot = buffer.lastIndexOf(".");
 	return buffer.substr(dot + 1);
 }
 function backgroundXml(v) {
 	const title = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-title.txt`, 'utf8');
-	const ext = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-ext.txt`, 'utf8') || getImgExt(title);
+	const ext = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-ext.txt`, 'utf8') || getExt(title);
 	return `<background subtype="0" id="${v.id}.${ext}" asset_url="/assets/${v.type}/${v.id}.${ext}" name="${title}" enable="Y"/>`;
+}
+function soundXml(v, type) {
+	const title = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-title.txt`, 'utf8');
+	const ext = fs.existsSync(process.env.META_FOLDER + `/${v.id}-ext.txt`) ? fs.readFileSync(process.env.META_FOLDER + `/${
+		v.id
+	}-ext.txt`, 'utf8') : getExt(title);
+	const durMetaFile = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-dur.txt`, 'utf8');
+	const dot = durMetaFile.lastIndexOf(".");
+	const dur = durMetaFile.substr(dot + 1);
+	return `<sound subtype="${type}" id="${v.id}.${ext}" name="${title}" enable="Y" duration="${dur}" downloadtype="progressive"/>`;
 }
 async function listAssets(data) {
 	var xmlString, files;
@@ -44,13 +55,20 @@ async function listAssets(data) {
 				v.theme
 			}" thumbnail_url="/char_thumbs/${v.id}.png" copyable="Y"><tags/></char>`).join("")}</ugc>`;
 			break;
-		}
-		case "prop": {
+		} case "prop": {
 			const assets = asset.list("prop", "png");
 			files = asset.list("prop", "jpg");
 			xmlString = `${header}<ugc more="0">${files.map(v => propXml(v)).join("")}${assets.map(v => propXml(v)).join("")}</ugc>`;
 			break;
-		}
+		} case "sound": {
+			files = asset.list("bgmusic", "mp3");
+			const assets = asset.list("soundeffect", "mp3");
+			const sounds = asset.list("voiceover", "mp3");
+			xmlString = `${header}<ugc more="0">${files.map(v => soundXml(v, "bgmusic")).join("")}${
+				assets.map(v => soundXml(v, "soundeffect")).join("")
+			}${sounds.map(v => soundXml(v, "voiceover")).join("")}</ugc>`;
+			break;
+		}	
 	}
 	return Buffer.from(xmlString);	
 }
@@ -79,7 +97,8 @@ module.exports = function (req, res, url) {
 				case "/goapi/getAsset/":
 				case "/goapi/getAssetEx/": {
 					loadPost(req, res).then(data => {
-						asset.load(data.assetId.slice(0, -4)).then(b => {
+						var [ _prefix, aId ] = data.assetId.split("-");
+						asset.load(aId.slice(0, -4) || data.assetId.slice(0, -4)).then(b => {
 							res.setHeader("Content-Length", b.length);
 							res.setHeader("Content-Type", "audio/mp3");
 							res.end(b);
@@ -158,23 +177,55 @@ module.exports = function (req, res, url) {
 					return true;
 				} case "/upload_asset": {
 					formidable().parse(req, (_, fields, files) => {
-						const [ ut, type, ext ] = fields.params.split(".");
+						var [ ut, type, ext ] = fields.params.split(".");
+						var subtype = "",
+						prefix = "";
 						const path = files.import.path;
 						const name = files.import.name;
 						const buffer = fs.readFileSync(path);
-						asset.save(ut, type, ext, buffer).then(id => {
-							asset.createMeta(id, name, type);
-							if (type == "prop") {
-								const meta = {
-									holdable: "0",
-									wearable: "0",
-									headable: "0",
-									placeable: "1"
-								};
-								fs.writeFileSync(process.env.META_FOLDER + `/p-${id}-meta.json`, JSON.stringify(meta));
+						switch (type) {
+							case "vo":
+								type = "sound";
+								subtype = "voiceover";
+								prefix = "v";
+								break;
+							case "se":
+								type = "sound";
+								subtype = "soundeffect";
+								prefix = "s";
+								break;
+							case "mu":
+								type = "sound";
+								subtype = "bgmusic";
+								prefix = "bg";
+								break;
+						}
+						asset.save(ut, type, ext, buffer, subtype).then(id => {
+							asset.createMeta(id, name, type, subtype);
+							switch (type) {
+								case "prop": {
+									const meta = {
+										holdable: "0",
+										wearable: "0",
+										headable: "0",
+										placeable: "1"
+									};
+									fs.writeFileSync(process.env.META_FOLDER + `/p-${id}-meta.json`, JSON.stringify(meta));
+									break;
+								} case "sound": {
+									mp3Duration(buffer, (e, d) => {
+										if (e) {
+											console.log(e);
+											return;
+										}
+										fs.writeFileSync(process.env.META_FOLDER + `/${prefix}-${id}-dur.txt`, `dur.${d * 1e3}`);
+									});
+									break;
+								}
 							}
 						}).catch(e => console.log(e));
-					}).catch(e => console.log(e));
+						fs.unlinkSync(path);
+					});
 					return true;
 				} case "/goapi/deleteAsset/": {
 					loadPost(req, res).then(data => {
@@ -182,9 +233,15 @@ module.exports = function (req, res, url) {
 						const id = data.assetId;
 						if (id.startsWith("p-")) type = "prop";
 						else if (id.startsWith("b-")) type = "bg";
+						else if (id.startsWith("bg-")) type = "bgmusic";
+						else if (id.startsWith("s-")) type = "soundeffect";
+						else if (id.startsWith("v-")) type = "voiceover";
 						else return;
 						asset.delete(id, type);
-					}).catch(e => console.log(e));
+					}).catch(e => {
+						console.log(e)
+						res.end(1 + util.xmlFail(e));
+					});
 					return true;
 				}
 			}

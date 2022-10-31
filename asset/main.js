@@ -18,6 +18,15 @@ module.exports = {
 					case "tts": {
 						prefix = "t";
 						break;
+					} case "bgmusic": {
+						prefix = "bg";
+						break;
+					} case "soundeffect": {
+						prefix = "s";
+						break;
+					} case "voiceover": {
+						prefix = "v";
+						break;
 					}
 				}
 				fs.writeFileSync(process.env.META_FOLDER + `/${prefix}-${id}-dur.txt`, `dur.${dur}`);
@@ -37,16 +46,26 @@ module.exports = {
 	delete(id, type) {
 		const n = Number.parseInt(id.substr(2));
 		var fn;
-		if (!fs.existsSync(fUtil.getFileIndexForAssets(`${type}-`, `.jpg`, n))) {
-			fn = fUtil.getFileIndexForAssets(`${type}-`, `.png`, n);
-		} else if (!fs.existsSync(fUtil.getFileIndexForAssets(`${type}-`, `.png`, n))) {
+		if (fs.existsSync(fUtil.getFileIndexForAssets(`${type}-`, `.jpg`, n))) {
 			fn = fUtil.getFileIndexForAssets(`${type}-`, `.jpg`, n);
-		}
+		} else if (fs.existsSync(fUtil.getFileIndexForAssets(`${type}-`, `.png`, n))) {
+			fn = fUtil.getFileIndexForAssets(`${type}-`, `.png`, n);
+		} else if (fs.existsSync(fUtil.getFileIndexForAssets(`${type}-`, `.mp3`, n))) {
+			fn = fUtil.getFileIndexForAssets(`${type}-`, `.mp3`, n);
+			if (fs.existsSync(fUtil.getFileIndexForAssets(`asset-`, `.mp3`, n))) {
+				fs.unlinkSync(fUtil.getFileIndexForAssets(`asset-`, `.mp3`, n))
+			}
+		} else return;
 		isNaN(n) ? rej("Error: Your ID Has Failed To Parse. Please Try Again Later.") : fs.unlinkSync(fn);
 		fs.unlinkSync(process.env.META_FOLDER + `/${id.slice(0, -4)}-title.txt`);
-		fs.unlinkSync(process.env.META_FOLDER + `/${id.slice(0, -4)}-meta.json`);
+		if (fs.existsSync(process.env.META_FOLDER + `/${id.slice(0, -4)}-meta.json`)) {
+			fs.unlinkSync(process.env.META_FOLDER + `/${id.slice(0, -4)}-meta.json`);
+		}
 		if (fs.existsSync(process.env.META_FOLDER + `/${id.slice(0, -4)}-ext.txt`)) {
 			fs.unlinkSync(process.env.META_FOLDER + `/${id.slice(0, -4)}-ext.txt`);
+		}
+		if (fs.existsSync(process.env.META_FOLDER + `/${id.slice(0, -4)}-dur.txt`)) {
+			fs.unlinkSync(process.env.META_FOLDER + `/${id.slice(0, -4)}-dur.txt`);
 		}
 	},
 	loadOnGetRequest(type, aId, ext) {
@@ -88,6 +107,27 @@ module.exports = {
 				ids = fUtil.getValidAssetFileIndicies("prop-", `.${ext}`);
 				for (const i in ids) {
 					const id = `p-${ids[i]}`;
+					table.unshift({ id: id, type: type });
+				}
+				break;
+			} case "bgmusic": {
+				ids = fUtil.getValidAssetFileIndicies("bgmusic-", `.${ext}`);
+				for (const i in ids) {
+					const id = `bg-${ids[i]}`;
+					table.unshift({ id: id, type: type });
+				}
+				break;
+			} case "soundeffect": {
+				ids = fUtil.getValidAssetFileIndicies("soundeffect-", `.${ext}`);
+				for (const i in ids) {
+					const id = `s-${ids[i]}`;
+					table.unshift({ id: id, type: type });
+				}
+				break;
+			} case "voiceover": {
+				ids = fUtil.getValidAssetFileIndicies("voiceover-", `.${ext}`);
+				for (const i in ids) {
+					const id = `v-${ids[i]}`;
 					table.unshift({ id: id, type: type });
 				}
 				break;
