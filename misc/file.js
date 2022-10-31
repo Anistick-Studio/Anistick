@@ -1,4 +1,5 @@
 const folder = process.env.SAVED_FOLDER;
+const assetFolder = process.env.ASSETS_FOLDER
 const nodezip = require("node-zip");
 const fs = require("fs");
 
@@ -42,6 +43,10 @@ module.exports = {
 		const indicies = this.getValidFileIndicies(s, suf, l);
 		return indicies.length ? indicies[indicies.length - 1] + 1 : 0;
 	},
+	getNextFileIdForAssets(s, suf = ".jpg", l = 7) {
+		const indicies = this.getValidAssetFileIndicies(s, suf, l);
+		return indicies.length ? indicies[indicies.length - 1] + 1 : 0;
+	},
 	/**
 	 * @param {string} s
 	 * @param {string} suf
@@ -65,6 +70,9 @@ module.exports = {
 	getFileIndex(s, suf = ".xml", n, l = 7) {
 		return this.getFileString(s, suf, this.padZero(n, l));
 	},
+	getFileIndexForAssets(s, suf = ".jpg", n, l = 7) {
+		return this.getAssetFileString(s, suf, this.padZero(n, l));
+	},
 	/**
 	 * @param {string} s
 	 * @param {string} suf
@@ -73,6 +81,9 @@ module.exports = {
 	 */
 	getFileString(s, suf = ".xml", name) {
 		return `${folder}/${s}${name}${suf}`;
+	},
+	getAssetFileString(s, suf = ".jpg", name) {
+		return `${assetFolder}/${s}${name}${suf}`;
 	},
 	/**
 	 * @param {string} s
@@ -84,6 +95,13 @@ module.exports = {
 		const regex = new RegExp(`${s}[0-9]{${l}}${suf}$`);
 		return fs
 			.readdirSync(folder)
+			.filter((v) => v && regex.test(v))
+			.map((v) => Number.parseInt(v.substr(s.length, l)));
+	},
+	getValidAssetFileIndicies(s, suf = ".jpg", l = 7) {
+		const regex = new RegExp(`${s}[0-9]{${l}}${suf}$`);
+		return fs
+			.readdirSync(assetFolder)
 			.filter((v) => v && regex.test(v))
 			.map((v) => Number.parseInt(v.substr(s.length, l)));
 	},

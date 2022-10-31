@@ -171,7 +171,7 @@ module.exports = {
 				date: fs.statSync(fn).mtime,
 				durationString: durationStr,
 				duration: duration,
-				title: title,
+				title: title || "Untitled Video",
 				id: movieId,
 			});
 		});

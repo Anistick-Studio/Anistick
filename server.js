@@ -9,13 +9,11 @@ const chl = require("./character/load");
 const chs = require("./character/save");
 const cht = require("./character/thmb");
 const mvu = require("./movie/upload");
-const asu = require("./asset/upload");
 const stl = require("./static/load");
 const str = require("./starter/core");
 const stt = require("./starter/thmb");
 const stp = require("./static/page");
-const asl = require("./asset/load");
-const asL = require("./asset/list");
+const asc = require("./asset/core");
 const ast = require("./asset/thmb");
 const mvl = require("./movie/load");
 const mvL = require("./movie/list");
@@ -30,7 +28,7 @@ const url = require("url");
 if (!fs.existsSync(env.ASSETS_FOLDER)) fs.mkdirSync(env.ASSETS_FOLDER);
 if (!fs.existsSync(env.META_FOLDER)) fs.mkdirSync(env.META_FOLDER);
 
-const functions = [str, stt, mvL, pmc, asl, chl, thl, thL, chs, cht, asL, tsl, chr, ast, mvm, mvl, mvs, mvt, tsv, asu, mvu, stp, stl];
+const functions = [str, stt, mvL, pmc, chl, thl, thL, chs, cht, asc, tsl, chr, ast, mvm, mvl, mvs, mvt, tsv, mvu, stp, stl];
 
 let opt = {
 	key: fs.readFileSync('the.key'),
@@ -50,7 +48,7 @@ function scf() {
 			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		}
 	})
-	.listen(env.HTTP_PORT, "0.0.0.0");
+	.listen(env.HTTP_PORT, "0.0.0.0" || "127.0.0.1", console.log("Anistick (HTTP) Has Started"));
 
 
 	https.createServer(opt, function (req, res) {
@@ -66,6 +64,6 @@ function scf() {
 			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		}
 	})
-	.listen(env.HTTPS_PORT, "0.0.0.0");
+	.listen(env.HTTPS_PORT, "0.0.0.0" || "127.0.0.1", console.log("Anistick (HTTPS) Has Started"));
 };
 module.exports.scf = scf;
