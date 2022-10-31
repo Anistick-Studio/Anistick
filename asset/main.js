@@ -92,6 +92,27 @@ module.exports = {
 			res(id);
 		});
 	},
+	saveStream(_ut, type, ext, buffer, subtype) {
+		var id;
+		if (type != "sound") {
+			if (type == "prop" && subtype != "video") {
+				id = fUtil.getNextFileIdForAssets(`${type}-`, `.${ext}`);
+				const path = fUtil.getFileIndexForAssets(`${type}-`, `.${ext}`, id);
+				fs.writeFileSync(path, buffer);
+			} else {
+				id = fUtil.getNextFileIdForAssets(`${subtype}-`, `.${ext}`);
+				const path = fUtil.getFileIndexForAssets(`${subtype}-`, `.${ext}`, id);
+				fs.writeFileSync(path, buffer);
+			}
+		} else {
+			id = fUtil.getNextFileIdForAssets(`asset-`, `.${ext}`);
+			const path = fUtil.getFileIndexForAssets(`asset-`, `.${ext}`, id);
+			const subpath = fUtil.getFileIndexForAssets(`${subtype}-`, `.${ext}`, id);
+			fs.writeFileSync(subpath, buffer);
+			fs.writeFileSync(path, buffer);
+		}
+		return `${id}.${ext}`;
+	},
 	list(type, ext) {
 		const table = [];
 		var ids;
@@ -128,6 +149,13 @@ module.exports = {
 				ids = fUtil.getValidAssetFileIndicies("voiceover-", `.${ext}`);
 				for (const i in ids) {
 					const id = `v-${ids[i]}`;
+					table.unshift({ id: id, type: type });
+				}
+				break;
+			} case "video": {
+				ids = fUtil.getValidAssetFileIndicies("video-", `.${ext}`);
+				for (const i in ids) {
+					const id = `vi-${ids[i]}`;
 					table.unshift({ id: id, type: type });
 				}
 				break;

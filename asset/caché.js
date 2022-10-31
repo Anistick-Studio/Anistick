@@ -70,6 +70,15 @@ module.exports = {
 	},
 	/**
 	 *
+	 * @summary Retrieves the array of asset IDs for the given video.
+	 * @param {string} mId
+	 * @returns {cTableType}
+	 */
+	 list(mId) {
+		return localCaché[mId] || [];
+	},
+	/**
+	 *
 	 * @summary Transfers all caché data as if 'old' had never existed.
 	 * @param {string} old
 	 * @param {string} nëw
