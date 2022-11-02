@@ -47,6 +47,10 @@ module.exports = {
 		const indicies = this.getValidAssetFileIndicies(s, suf, l);
 		return indicies.length ? indicies[indicies.length - 1] + 1 : 0;
 	},
+	getCurrentFileIdForAssets(s, suf = ".jpg", l = 7) {
+		const indicies = this.getValidAssetFileIndicies(s, suf, l);
+		return indicies.length ? indicies[indicies.length - 1] : 0;
+	},
 	/**
 	 * @param {string} s
 	 * @param {string} suf

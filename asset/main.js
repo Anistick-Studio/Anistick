@@ -2,8 +2,53 @@
 const fUtil = require("../misc/file");
 const caché = require("./caché");
 const fs = require("fs");
+const process = require("process");
 
 module.exports = {
+	parseXmls(v) {
+		let xml;
+		switch (v.type) {
+			case "char": {
+				xml = `<char id="${v.id}" enc_asset_id="${v.id}" name="Untitled" cc_theme_id="${v.themeId}" thumbnail_url="char_default.png" copyable="Y"><tags/></char>`;
+				break;
+			} case "bg": {
+				xml = `<background subtype="0" id="${v.id}" enc_asset_id="${v.id}" name="${v.title}" enable="Y" asset_url="/assets/${v.type}/${v.id}"/>`
+				break;
+			} case "movie": {
+				xml = `<movie id="${v.id}" enc_asset_id="${v.id}" path="/_SAVED/${v.id}" numScene="1" title="${v.title}" thumbnail_url="/starter_thums/${v.id}.png"><tags></tags></movie>`;
+				break;
+			} case "prop": {
+				if (v.subtype == "video") {
+					xml = `<prop subtype="video" id="${v.id}" enc_asset_id="${v.id}" name="${v.title}" enable="Y" placeable="1" facing="left" width="${v.width}" height="${v.height}" asset_url="/assets/video/${v.id}" thumbnail_url="/assets/video/${v.id.slice(0, -3) + "png"}"/>`;
+				} else {
+					xml = `<prop subtype="0" id="${v.id}" enc_asset_id="${v.id}" name="${v.title}" enable="Y" headable="${v.headable}" holdable="${v.holdable}" wearable="${v.wearable}" placeable="${v.placeable}" facing="left" width="0" height="0" asset_url="/assets/${v.type}/${v.id}"/>`;
+				}
+				break;
+			} case "sound": {
+				xml = `<sound subtype="${v.subtype}" id="${v.id}" enc_asset_id="${v.id}" name="${v.title}" enable="Y" duration="${v.duration}" downloadtype="progressive"/>`;
+				break;
+			}
+		}
+		return xml;
+	},
+	meta(file, type, subtype) {
+		const id = file.slice(0, -4);
+		var meta;
+		const title = fs.readFileSync(process.env.META_FOLDER + `/${id}-title.txt`, 'utf8');
+		switch (type) {
+			case "prop": {
+				const m = require("." + process.env.META_FOLDER + `/${id}-meta.json`);
+				if (subtype == "video") meta = {
+					id: file, title: title, width: m.width, height: m.height, type: "prop", subtype: subtype
+				};
+				else meta = {
+					id: file, title: title, holdable: m.holdable, headable: m.headable, wearable: m.wearable, placeable: m
+					.placeable, type: "prop"
+				};
+			}
+		}
+		return meta;
+	},
 	createMeta(id, name, type, subtype, dur = false) {
 		var prefix;
 		switch (type) {
@@ -34,11 +79,12 @@ module.exports = {
 		}
 		fs.writeFileSync(process.env.META_FOLDER + `/${prefix}-${id}-title.txt`, name);
 	},
-	load(aId) {
+	load(aId, ext) {
 		return new Promise((res, rej) => {
-			if (!fUtil.getFileIndexForAssets("asset-", ".mp3", aId)) rej("Error: The file that was trying to load does not exist.");
+			ext ||= "mp3"
+			if (!fUtil.getFileIndexForAssets("asset-", `.${ext}`, aId)) rej("Error: The file that was trying to load does not exist.");
 			else {
-				const path = fUtil.getFileIndexForAssets("asset-", ".mp3", aId);
+				const path = fUtil.getFileIndexForAssets("asset-", `.${ext}`, aId);
 				res(fs.readFileSync(path));
 			}
 		});

@@ -44,6 +44,25 @@ module.exports = {
 	},
 	/**
 	 *
+	 * @summary Saves a buffer in movie caché with a given ID.
+	 * @param {string} mId
+	 * @param {string} aId
+	 * @param {Buffer} buffer
+	 */
+	 save(mId, aId, buffer) {
+		if (!this.validAssetId(aId)) return;
+		localCaché[mId] = localCaché[mId] || [];
+		var stored = localCaché[mId];
+		const path = `${cachéFolder}/${mId}.${aId}`;
+
+		if (!stored.includes(aId)) stored.push(aId);
+		if (fs.existsSync(path)) size -= fs.statSync(path).size;
+		fs.writeFileSync(path, buffer);
+		size += buffer.size;
+		return buffer;
+	},
+	/**
+	 *
 	 * @summary Saves a given dictionary of buffers to caché.
 	 * @param {string} mId
 	 * @param {{[aId:string]:Buffer}} buffers

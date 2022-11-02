@@ -128,6 +128,18 @@ module.exports = {
 			}
 		});
 	},
+	async loadStock(cId) {
+		const nId = (cId.slice(0, -3) + "000").padStart(9, 0);
+		const chars = await get(`${baseUrl}/${nId}.txt`);
+		var line = chars.toString("utf8").split("\n").find(v => v.substring(0, 3) == cId.slice(-3));
+		if (line) return Buffer.from(line.substring(3));
+		else return Buffer.from("Character not found.");
+	},
+	parseTheme(buffer) {
+		const beg = buffer.indexOf(`theme_id="`) + 10;
+		const end = buffer.indexOf(`"`, beg);
+		return buffer.slice(beg, end).toString();
+	},
 	/**
 	 * @param {Buffer} data
 	 * @param {string} id
