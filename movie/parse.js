@@ -153,8 +153,6 @@ module.exports = {
 		const zip = nodezip.create();
 		const themes = { common: true };
 		var ugc = `${header}<theme id="ugc" name="ugc">`;
-		var assetBuffers = {};
-		var ugcData = {};
 		fUtil.addToZip(zip, "movie.xml", xmlBuffer);
 
 		// this is common in this file
@@ -186,7 +184,6 @@ module.exports = {
 					ugc += asset.parseXmls(asset.meta(pieces[2], type, subtype));
 					// and add the file
 					fUtil.addToZip(zip, filename, buffer);
-					assetBuffers[id] = buffer;
 
 					// add video thumbnails
 					if (type == "prop" && subtype == "video") {
@@ -196,7 +193,6 @@ module.exports = {
 						const name = pieces.join(".");
 						const buff = await asset.load(id, "png");
 						fUtil.addToZip(zip, name, buff);
-						assetBuffers[id] = buffer;
 					}
 				} catch (e) {
 					console.error(`WARNING: Couldn't find asset ${id}:`, e);
@@ -206,7 +202,7 @@ module.exports = {
 				const filepath = `${store}/${pieces.join("/")}`;
 
 				// add the file to the zip
-				fUtil.addToZip(zip, filename, await get(filepath));
+				get(filepath).then(buff => fUtil.addToZip(zip, filename, buff));
 			}
 
 			themes[themeId] = true;
@@ -282,7 +278,7 @@ module.exports = {
 									const filepath = `${store}/${pieces.join("/")}`;
 									const filename = pieces.join(".");
 
-									fUtil.addToZip(zip, filename, await get(filepath));
+									get(filepath).then(buff => fUtil.addToZip(zip, filename, buff));
 								}
 
 								for (const e3I in elem2.children) {
@@ -304,7 +300,7 @@ module.exports = {
 
 										pieces2.splice(1, 1, "prop");
 										const filename = `${pieces2.join(".")}.swf`;
-										fUtil.addToZip(zip, filename, await get(filepath));
+										get(filepath).then(buff => fUtil.addToZip(zip, filename, buff));
 									}
 
 									themes[pieces2[0]] = true;
@@ -323,7 +319,7 @@ module.exports = {
 
 								const filename = `${name2Font(text.attr.font)}.swf`;
 								const filepath = `${source}/go/font/${filename}`;
-								fUtil.addToZip(zip, filename, await get(filepath));
+								get(filepath).then(buff => fUtil.addToZip(zip, filename, buff));
 								break;
 							}
 						}
@@ -355,7 +351,7 @@ module.exports = {
 		fUtil.addToZip(zip, 'ugc.xml', Buffer.from(ugc + `</theme>`));
 		const z = await zip.zip();
 		fs.writeFileSync("results.zip", z);
-		return { zipBuf: z, caché: assetBuffers };
+		return { zipBuf: z };
 	},
 
 	/**
