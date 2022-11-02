@@ -23,7 +23,9 @@ function movieXml(v) {
 }
 function propXml(v) {
 	const title = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-title.txt`, 'utf8');
-	const ext = fs.readFileSync(process.env.META_FOLDER + `/${v.id}-ext.txt`, 'utf8') || getExt(title);
+	const ext = fs.existsSync(process.env.META_FOLDER + `/${v.id}-ext.txt`) ? fs.readFileSync(process.env.META_FOLDER + `/${
+		v.id
+	}-ext.txt`, 'utf8') : getExt(title);
 	const meta = require('.' + process.env.META_FOLDER + `/${v.id}-meta.json`);
 	return `<prop subtype="0" id="${v.id}.${ext}" name="${
 		title
@@ -134,8 +136,9 @@ module.exports = function (req, res, url) {
 				case "/goapi/getAsset/":
 				case "/goapi/getAssetEx/": {
 					loadPost(req, res).then(data => {
-						var [ _prefix, aId ] = data.assetId.split("-");
-						asset.load(aId.slice(0, -4) || data.assetId.slice(0, -4)).then(b => {
+						const [ prefix, id ] = data.assetId.split(".");
+						console.log(id.slice(0, -4));
+						asset.load(id.slice(0, -4)).then(b => {
 							res.setHeader("Content-Length", b.length);
 							res.setHeader("Content-Type", "audio/mp3");
 							res.end(b);

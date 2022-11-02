@@ -43,6 +43,7 @@ function scf() {
 			if (!found) res.statusCode = 404;
 			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		} catch (x) {
+			const parsedUrl = url.parse(req.url, true);
 			res.statusCode = 500;
 			console.log(x);
 			console.log(req.method, parsedUrl.path, "-", res.statusCode);

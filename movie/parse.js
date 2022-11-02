@@ -186,13 +186,15 @@ module.exports = {
 					fUtil.addToZip(zip, filename, buffer);
 
 					// add video thumbnails
-					if (type == "prop" && subtype == "video") {
+					if (subtype == "video") {
 						path = fUtil.getFileIndexForAssets("asset-", ".png", id);
 						b = fs.readFileSync(fUtil.getFileIndexForAssets("video-", ".png", id));
 						if (!fs.existsSync(path)) fs.writeFileSync(path, b);
-						const name = pieces.join(".");
-						const buff = await asset.load(id, "png");
-						fUtil.addToZip(zip, name, buff);
+						const filename = pieces.join(".").slice(0, -3) + "png";
+						asset.load(id, "png").then(buffer => {
+							console.log(buffer);
+							fUtil.addToZip(zip, filename, buffer);
+						});
 					}
 				} catch (e) {
 					console.error(`WARNING: Couldn't find asset ${id}:`, e);
