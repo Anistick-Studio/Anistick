@@ -292,6 +292,7 @@ module.exports = function (req, res, url) {
 							}).catch(e => console.log(e));
 							fs.unlinkSync(path);
 						} else convertVideoToFlv(ut, type, ext, buffer, subtype, path);
+						res.end();
 					});
 					return true;
 				} case "/goapi/deleteAsset/": {
