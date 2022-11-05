@@ -81,7 +81,7 @@ module.exports = {
 	},
 	load(aId, ext) {
 		return new Promise((res, rej) => {
-			ext ||= "mp3"
+			if (!ext) ext = "mp3"
 			if (!fUtil.getFileIndexForAssets("asset-", `.${ext}`, aId)) rej("Error: The file that was trying to load does not exist.");
 			else {
 				const path = fUtil.getFileIndexForAssets("asset-", `.${ext}`, aId);
