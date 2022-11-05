@@ -1,3 +1,4 @@
+const p = process.env.PORT;
 const env = Object.assign(process.env, require("./env"), require("./config"));
 
 const http = require("http");
@@ -66,6 +67,6 @@ function scf() {
 			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		}
 	})
-	.listen(env.HTTPS_PORT, "0.0.0.0" || "127.0.0.1", console.log("Anistick (HTTPS) Has Started"));
+	.listen(p || env.HTTPS_PORT, "127.0.0.1", console.log("Anistick (HTTPS) Has Started"));
 };
 module.exports.scf = scf;
