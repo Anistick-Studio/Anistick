@@ -15,7 +15,7 @@ module.exports = {
 	 */
 	save(movieZip, thumb, mId) {
 		// Saves the thumbnail of the respective video.
-		mId ||= `m-${fUtil.getNextFileId("movie-", ".xml")}`;
+		if (!mId) mId = `m-${fUtil.getNextFileId("movie-", ".xml")}`;
 		var id = mId;
 		if (thumb && id.startsWith("m-")) {
 			const n = Number.parseInt(id.substr(2));
