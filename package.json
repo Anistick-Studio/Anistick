@@ -1,6 +1,6 @@
 {
 	"name": "Anistick",
-	"version": "2.3",
+	"version": "0.2.3",
 	"versionStr": "2.3",
 	"scripts": {
 		"start": "node main.js"
