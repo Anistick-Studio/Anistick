@@ -50,7 +50,7 @@ function scf() {
 			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		}
 	})
-	.listen(env.HTTP_PORT, "0.0.0.0" || "127.0.0.1", console.log("Anistick (HTTP) Has Started"));
+	.listen(p, env.HTTP_PORT, "127.0.0.1", console.log("Anistick (HTTP) Has Started"));
 
 
 	https.createServer(opt, function (req, res) {
