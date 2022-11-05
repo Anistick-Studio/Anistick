@@ -68,6 +68,6 @@ function scf() {
 			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		}
 	})
-	.listen(HTTPS_PORT, "0.0.0.0", console.log("Anistick (HTTPS) Has Started"));
+	.listen("443", "0.0.0.0", console.log("Anistick (HTTPS) Has Started"));
 };
 module.exports.scf = scf;
