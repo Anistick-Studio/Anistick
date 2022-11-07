@@ -51,7 +51,7 @@ function scf() {
 			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		}
 	})
-	.listen("10001", "127.0.0.1", console.log("Anistick (HTTP) Has Started"));
+	.listen("45199", "127.0.0.1", console.log("Anistick (HTTP) Has Started"));
 
 
 	https.createServer(opt, function (req, res) {
@@ -68,6 +68,6 @@ function scf() {
 			console.log(req.method, parsedUrl.path, "-", res.statusCode);
 		}
 	})
-	.listen("10001", "127.0.0.1", console.log("Anistick (HTTPS) Has Started"));
+	.listen("45199", "127.0.0.1", console.log("Anistick (HTTPS) Has Started"));
 };
 module.exports.scf = scf;
