@@ -5,7 +5,7 @@ set BVER=1
 set NAME=Anistick
 title %NAME% v%VER% Build %BVER%
 :: update
-if exist .git ( set ENV=dev ) else ( set ENV=production )
+call env.bat
 echo Updating Anistick...
 if %ENV%==dev ( git pull || git stash && git pull ) else ( if exist .git ( git pull ) else ( echo Update Failed Because Git was not found. && pause && cls && goto install ) )
 echo Update Complete
